@@ -18,6 +18,7 @@ def get_status():
 
 @app_views.route('/stats')
 def get_count():
+    """Frequency list of the database objects."""
     classes_counts = dict(
         (cls.__name__, models.storage.count(cls)) for cls in classes.values()
     )
