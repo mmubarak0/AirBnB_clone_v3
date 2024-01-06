@@ -17,7 +17,7 @@ def list_cities_from_state(state_id):
         cities = [city.to_dict() for city in state.cities]
         if cities:
             return jsonify(cities)
-    return 404
+    return jsonify({"error": "Not found"}), 404
 
 
 @app_views.route('/cities/<city_id>', methods=['GET'])
@@ -26,7 +26,7 @@ def get_city_by_id(city_id):
     city = models.storage.get(City, city_id)
     if city:
         return jsonify(city.to_dict())
-    return 404
+    return jsonify({"error": "Not found"}), 404
 
 
 @app_views.route('/cities/<city_id>', methods=['DELETE'])
@@ -36,8 +36,8 @@ def delete_city_by_id(city_id):
     if city:
         models.storage.delete(city)
         models.storage.save()
-        return 200
-    return 404
+        return jsonify({}), 200
+    return jsonify({"error": "Not found"}), 404
 
 
 @app_views.route('/states/<state_id>/cities', methods=['POST'])
@@ -54,7 +54,7 @@ def create_city(state_id):
                 return jsonify(city.to_dict()), 201
             return jsonify({"error": "Missing name"}), 400
         return jsonify({"error": "Not a JSON"}), 400
-    return 404
+    return jsonify({"error": "Not found"}), 404
 
 
 @app_views.route('/cities/<city_id>', methods=['PUT'])
@@ -77,4 +77,4 @@ def alter_city_by_id(city_id):
             city.save()
             return jsonify(city.to_dict()), 200
         return jsonify({"error": "Not a JSON"}), 400
-    return 404
+    return jsonify({"error": "Not found"}), 404
