@@ -23,3 +23,9 @@ def get_count():
         (cls.__name__, models.storage.count(cls)) for cls in classes.values()
     )
     return jsonify(classes_counts)
+
+
+@app_views.app_errorhandler(404)
+def handle_404(err):
+    """Handle 404 page not found error."""
+    return jsonify({"error": "Not found"})
