@@ -20,7 +20,9 @@ def get_status():
 def get_count():
     """Frequency list of the database objects."""
     classes_counts = dict(
-        (cls.__name__, models.storage.count(cls)) for cls in classes.values()
+        (
+            cls.__tablename__, models.storage.count(cls)
+        ) for cls in classes.values()
     )
     return jsonify(classes_counts)
 
@@ -28,4 +30,4 @@ def get_count():
 @app_views.app_errorhandler(404)
 def handle_404(err):
     """Handle 404 page not found error."""
-    return jsonify({"error": "Not found"})
+    return jsonify({"error": "Not found"}), 404

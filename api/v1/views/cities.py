@@ -17,6 +17,7 @@ def list_cities_from_state(state_id):
         cities = [city.to_dict() for city in state.cities]
         if cities:
             return jsonify(cities)
+        return jsonify([])
     return jsonify({"error": "Not found"}), 404
 
 
@@ -40,12 +41,18 @@ def delete_city_by_id(city_id):
     return jsonify({"error": "Not found"}), 404
 
 
-@app_views.route('/states/<state_id>/cities', methods=['POST'])
+@app_views.route(
+    '/states/<state_id>/cities', methods=['POST'], strict_slashes=False
+)
 def create_city(state_id):
     """Create City in a state route."""
     state = models.storage.get(State, state_id)
     if state:
-        city_dict = request.get_json()
+        city_dict = {}
+        try:
+            city_dict = request.get_json()
+        except Exception:
+            pass
         if type(city_dict) is dict:
             if "name" in city_dict:
                 city = City(**city_dict)
@@ -62,19 +69,22 @@ def alter_city_by_id(city_id):
     """Alter City by id route."""
     city = models.storage.get(City, city_id)
     if city:
-        data = request.get_json()
-        dont_touch = ["id", "state_id", "created_at", "updated_at"]
-        filtered_data = {
-            key: data[key] for key in list(
-                filter(
-                    lambda key: key not in dont_touch, data
+        data = {}
+        try:
+            data = request.get_json()
+            dont_touch = ["id", "state_id", "created_at", "updated_at"]
+            filtered_data = {
+                key: data[key] for key in list(
+                    filter(
+                        lambda key: key not in dont_touch, data
+                    )
                 )
-            )
-        }
-        if type(data) is dict:
-            for key, value in filtered_data.items():
-                setattr(city, key, value)
-            city.save()
-            return jsonify(city.to_dict()), 200
-        return jsonify({"error": "Not a JSON"}), 400
+            }
+            if type(data) is dict:
+                for key, value in filtered_data.items():
+                    setattr(city, key, value)
+                city.save()
+                return jsonify(city.to_dict()), 200
+        except Exception:
+            return jsonify({"error": "Not a JSON"}), 400
     return jsonify({"error": "Not found"}), 404
