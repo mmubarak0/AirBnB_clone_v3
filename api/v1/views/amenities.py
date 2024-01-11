@@ -18,7 +18,7 @@ def list_of_amenities():
                 ]
     if amenities:
         return jsonify(amenities)
-    return jsonify({"error": "Not found"}), 404
+    return jsonify([]), 404
 
 
 @app_views.route('/amenities/<amenity_id>', methods=['GET'])
@@ -41,10 +41,14 @@ def delete_amenity_by_id(amenity_id):
     return jsonify({"error": "Not found"}), 404
 
 
-@app_views.route('/amenities', methods=['POST'])
+@app_views.route('/amenities', methods=['POST'], strict_slashes=False)
 def create_amenity():
     """Create Amenity object route."""
-    amenity_dict = request.get_json()
+    amenity_dict = {}
+    try:
+        amenity_dict = request.get_json()
+    except Exception:
+        pass
     if type(amenity_dict) is dict:
         if "name" in amenity_dict:
             amenity = Amenity(**amenity_dict)
@@ -59,19 +63,22 @@ def alter_amenity_by_id(amenity_id):
     """Alter Amenity by id route."""
     amenity = models.storage.get(Amenity, amenity_id)
     if amenity:
-        data = request.get_json()
-        dont_touch = ["id", "created_at", "updated_at"]
-        filtered_data = {
-            key: data[key] for key in list(
-                filter(
-                    lambda key: key not in dont_touch, data
+        try:
+            data = request.get_json()
+            dont_touch = ["id", "created_at", "updated_at"]
+            filtered_data = {
+                key: data[key] for key in list(
+                    filter(
+                        lambda key: key not in dont_touch, data
+                    )
                 )
-            )
-        }
-        if type(data) is dict:
-            for key, value in filtered_data.items():
-                setattr(amenity, key, value)
-            amenity.save()
-            return jsonify(amenity.to_dict()), 200
-        return jsonify({"error": "Not a JSON"}), 400
+            }
+            if type(data) is dict:
+                for key, value in filtered_data.items():
+                    setattr(amenity, key, value)
+                amenity.save()
+                return jsonify(amenity.to_dict()), 200
+            return jsonify({"error": "Not a JSON"}), 400
+        except Exception:
+            return jsonify({"error": "Not a JSON"}), 400
     return jsonify({"error": "Not found"}), 404
