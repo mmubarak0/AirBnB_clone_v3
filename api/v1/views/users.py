@@ -14,7 +14,7 @@ def list_of_Users():
     users = [user.to_dict() for user in models.storage.all(User).values()]
     if users:
         return jsonify(users)
-    return jsonify({"error": "Not found"}), 404
+    return jsonify([]), 404
 
 
 @app_views.route('/users/<user_id>', methods=['GET'])
@@ -37,10 +37,14 @@ def delete_user_by_id(user_id):
     return jsonify({"error": "Not found"}), 404
 
 
-@app_views.route('/users', methods=['POST'])
+@app_views.route('/users', methods=['POST'], strict_slashes=False)
 def create_user():
     """Create User object route."""
-    user_dict = request.get_json()
+    user_dict = {}
+    try:
+        user_dict = request.get_json()
+    except Exception:
+        pass
     if type(user_dict) is dict:
         if "email" in user_dict:
             if "password" in user_dict:
@@ -57,19 +61,22 @@ def alter_user_by_id(user_id):
     """Alter User by id route."""
     user = models.storage.get(User, user_id)
     if user:
-        data = request.get_json()
-        dont_touch = ["id", "email", "created_at", "updated_at"]
-        filtered_data = {
-            key: data[key] for key in list(
-                filter(
-                    lambda key: key not in dont_touch, data
+        try:
+            data = request.get_json()
+            dont_touch = ["id", "email", "created_at", "updated_at"]
+            filtered_data = {
+                key: data[key] for key in list(
+                    filter(
+                        lambda key: key not in dont_touch, data
+                    )
                 )
-            )
-        }
-        if type(data) is dict:
-            for key, value in filtered_data.items():
-                setattr(user, key, value)
-            user.save()
-            return jsonify(user.to_dict()), 200
-        return jsonify({"error": "Not a JSON"}), 400
+            }
+            if type(data) is dict:
+                for key, value in filtered_data.items():
+                    setattr(user, key, value)
+                user.save()
+                return jsonify(user.to_dict()), 200
+            return jsonify({"error": "Not a JSON"}), 400
+        except Exception:
+            return jsonify({"error": "Not a JSON"}), 400
     return jsonify({"error": "Not found"}), 404
